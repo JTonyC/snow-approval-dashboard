@@ -14,7 +14,7 @@ load_dotenv()  # Load environment variables from a .env file if available
 SERVICENOW_URL = os.getenv("snow_pdi_url") #snow pdi url
 CLIENT_ID = os.getenv("snow_oauth_client_id")#snow oauth pdi client id
 CLIENT_SECRET = os.getenv("snow_oauth_client_secret")#snow oauth pdi client secret
-REDIRECT_URI = "https://tcazr-testwebapp-dce6c5dbhvgmdbh8.uksouth-01.azurewebsites.net/callback"  # Use your actual Azure Web App URL
+REDIRECT_URI = "https://tcazr-testwebapp-dce6c5dbhvgmdbh8.uksouth-01.azurewebsites.net/callback"  # Use your Azure Web App URL
 
 def generate_pkce():
     """Generate a PKCE code verifier and code challenge."""
@@ -23,6 +23,27 @@ def generate_pkce():
         hashlib.sha256(code_verifier.encode()).digest()
     ).decode().rstrip("=")
     return code_verifier, code_challenge
+
+def refresh_access_token():
+    refresh_token = session.get("refresh_token")
+    if not refresh_token:
+        return None
+
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": CLIENT_ID,
+    }
+
+    token_response = requests.post(f"{SERVICENOW_URL}/oauth_token.do", data=data)
+    if token_response.status_code == 200:
+        token_data = token_response.json()
+        session["access_token"] = token_data["access_token"]
+        # Update refresh_token if a new one is provided.
+        session["refresh_token"] = token_data.get("refresh_token", refresh_token)
+        return token_data["access_token"]
+    else:
+        return None
 
 #amended
 def get_user_approval_tasks():

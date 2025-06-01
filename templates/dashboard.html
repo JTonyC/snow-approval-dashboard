@@ -34,47 +34,67 @@
 
 <section>
     <h2>Your Approval Tasks</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Approving</th>
-            <th>Short Description</th>
-            <th>Planned Start</th>
-            <th>Planned End</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="approval-list">
-        {% for approval in approvals.approvals %}
-        <tr class="approval-row {% if loop.index > 5 %}hidden-approval{% endif %}">
-            <td>
-                {% if approval.approving %}
-                    <strong>{{ approval.approving }}</strong>  <!-- Displays only the change number -->
-                {% else %}
-                    No linked request.
-                {% endif %}
-            </td>
-            <td>{{ approval.short_description }}</td> <!-- Correct short description placement -->
-            <td>{{ approval.planned_start_date or "N/A" }}</td> <!-- Uses planned dates directly -->
-            <td>{{ approval.planned_end_date or "N/A" }}</td>
-            <td>
-                <form action="{{ url_for('approve_task', approval_id=approval.sys_id) }}" method="post">
-                    <button type="submit" class="btn btn-success">Approve</button>
-                </form>
-                <form action="{{ url_for('reject_task', approval_id=approval.sys_id) }}" method="post">
-                    <button type="submit" class="btn btn-danger mt-2">Reject</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Approving</th>
+                <th>Short Description</th>
+                <th>Planned Start</th>
+                <th>Planned End</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="approval-list">
+            {% for approval in approvals.approvals %}
+            <tr class="approval-row {% if loop.index > 5 %}hidden-approval{% endif %}">
+                <td>
+                    {% if approval.approving %}
+                        <strong>{{ approval.approving }}</strong>  <!-- Displays only the change number -->
+                    {% else %}
+                        No linked request.
+                    {% endif %}
+                </td>
+                <td>{{ approval.short_description }}</td> <!-- Correct short description placement -->
+                <td>{{ approval.planned_start_date or "N/A" }}</td> <!-- Uses planned dates directly -->
+                <td>{{ approval.planned_end_date or "N/A" }}</td>
+                <td>
+                    <!-- Original form actions commented out -->
+                  <!-- {#
+                    <form action="{{ url_for('approve_task', approval_id=approval.sys_id) }}" method="post">
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
+                    <form action="{{ url_for('reject_task', approval_id=approval.sys_id) }}" method="post">
+                        <button type="submit" class="btn btn-danger mt-2">Reject</button>
+                    </form>
+                  -->
+                    <!-- Simulation buttons that just post a message for demo purposes -->
+                    <button type="button" class="btn btn-success" onclick="simulateAction('approve', '{{ approval.sys_id }}')">Approve</button>
+                    <button type="button" class="btn btn-danger mt-2" onclick="simulateAction('reject', '{{ approval.sys_id }}')">Reject</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-{% if approvals.approvals|length > 5 %}
-    <button id="toggleButton" class="btn btn-primary mt-3" onclick="toggleApprovals()">Show More</button>
-{% endif %}
+    {% if approvals.approvals|length > 5 %}
+        <button id="toggleButton" class="btn btn-primary mt-3" onclick="toggleApprovals()">Show More</button>
+    {% endif %}
+
+    <!-- Container for displaying simulated action feedback -->
+    <div id="actionFeedback" class="mt-3"></div>
+</section>
 
 <script>
+    function simulateAction(action, approvalId) {
+        // Construct and display the simulation message
+        const message = `Action success: ${action} simulated for approval ID ${approvalId}`;
+        document.getElementById("actionFeedback").innerText = message;
+        // Clear the message after 5 seconds
+        setTimeout(() => {
+            document.getElementById("actionFeedback").innerText = "";
+        }, 5000);
+    }
+
     function toggleApprovals() {
         let hiddenRows = document.querySelectorAll(".hidden-approval");
         let button = document.getElementById("toggleButton");
@@ -83,7 +103,7 @@
             row.style.display = row.style.display === "none" ? "table-row" : "none";
         });
 
-        button.innerText = button.innerText === "Show More" ? "Show More" : "Show Less";
+        button.innerText = button.innerText === "Show More" ? "Show Less" : "Show More";
     }
 </script>
 </body>
