@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    .hidden-approval {
+        display: none; /* Hide extra approvals initially */
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <header class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1>Approval Dashboard</h1>
+    </div>
+    <div class="d-flex align-items-center">
+      {% if session.user_name %}
+        <span class="me-3 h5">Hello, {{ session.user_name }}</span>
+      {% else %}
+        <span class="me-3 h5">Hello, User</span>
+      {% endif %}
+      <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+    </div>
+  </header>
+
+  <!-- <section>
+    <h2>User Data Debug Info</h2>
+    <pre>{{ session.user_data | tojson(indent=2) }}</pre>
+  </section> -->
+
+<section>
+    <h2>Your Approval Tasks</h2>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Approving</th>
+            <th>Short Description</th>
+            <th>Planned Start</th>
+            <th>Planned End</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="approval-list">
+        {% for approval in approvals.approvals %}
+        <tr class="approval-row {% if loop.index > 5 %}hidden-approval{% endif %}">
+            <td>
+                {% if approval.approving %}
+                    <strong>{{ approval.approving }}</strong>  <!-- Displays only the change number -->
+                {% else %}
+                    No linked request.
+                {% endif %}
+            </td>
+            <td>{{ approval.short_description }}</td> <!-- Correct short description placement -->
+            <td>{{ approval.planned_start_date or "N/A" }}</td> <!-- Uses planned dates directly -->
+            <td>{{ approval.planned_end_date or "N/A" }}</td>
+            <td>
+                <form action="{{ url_for('approve_task', approval_id=approval.sys_id) }}" method="post">
+                    <button type="submit" class="btn btn-success">Approve</button>
+                </form>
+                <form action="{{ url_for('reject_task', approval_id=approval.sys_id) }}" method="post">
+                    <button type="submit" class="btn btn-danger mt-2">Reject</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if approvals.approvals|length > 5 %}
+    <button id="toggleButton" class="btn btn-primary mt-3" onclick="toggleApprovals()">Show More</button>
+{% endif %}
+
+<script>
+    function toggleApprovals() {
+        let hiddenRows = document.querySelectorAll(".hidden-approval");
+        let button = document.getElementById("toggleButton");
+
+        hiddenRows.forEach(row => {
+            row.style.display = row.style.display === "none" ? "table-row" : "none";
+        });
+
+        button.innerText = button.innerText === "Show More" ? "Show More" : "Show Less";
+    }
+</script>
+</body>
+</html>
