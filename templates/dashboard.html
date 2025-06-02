@@ -40,7 +40,7 @@
         </thead>
         <tbody id="approval-list">
             {% for approval in approvals.approvals %}
-            <tr class="approval-row hidden-approval" style="display: none;">
+            <tr class="approval-row {% if loop.index > 5 %}hidden-approval" style="display: none;"{% endif %}>
                 <td><strong>{{ approval.approving or "No linked request" }}</strong></td>
                 <td>{{ approval.short_description }}</td>
                 <td>{{ approval.planned_start_date or "N/A" }}</td>
