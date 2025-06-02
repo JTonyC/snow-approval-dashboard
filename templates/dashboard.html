@@ -36,7 +36,7 @@
             </tr>
         </thead>
         <tbody id="approval-list">
-            {% for approval in approvals %}
+            {% for approval in approvals.approvals %}
             <tr class="approval-row {% if loop.index > 5 %}hidden-approval{% endif %}">
                 <td><strong>{{ approval.approving or "No linked request" }}</strong></td>
                 <td>{{ approval.short_description }}</td>
