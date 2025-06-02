@@ -40,7 +40,7 @@
         </thead>
         <tbody id="approval-list">
             {% for approval in approvals.approvals %}
-            <tr class="approval-row {% if loop.index > 5 %}hidden-approval" style="display: none;"{% endif %}>
+            <tr class="approval-row {% if loop.index > 5 %}hidden-approval{% endif %}" {% if loop.index > 5 %}style="display: none;"{% endif %}>
                 <td><strong>{{ approval.approving or "No linked request" }}</strong></td>
                 <td>{{ approval.short_description }}</td>
                 <td>{{ approval.planned_start_date or "N/A" }}</td>
@@ -66,7 +66,9 @@
     document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("toggleButton")?.addEventListener("click", function() {
             let hiddenRows = document.querySelectorAll(".hidden-approval");
-            let currentlyHidden = hiddenRows[0].style.display === "none";
+
+            // Determine if currently hidden or visible
+            let currentlyHidden = Array.from(hiddenRows).some(row => row.style.display === "none");
 
             hiddenRows.forEach(row => {
                 row.style.display = currentlyHidden ? "table-row" : "none";
@@ -75,6 +77,7 @@
             this.innerText = currentlyHidden ? "Show Less" : "Show More";
         });
     });
+
     // Handle approval and rejection actions simulated
     function simulateAction(action, approvalId) {
         const message = `Action success: ${action} simulated for approval ID ${approvalId}`;
