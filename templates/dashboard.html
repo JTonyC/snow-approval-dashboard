@@ -7,7 +7,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <style>
     .hidden-approval {
-        display: none; /* Correct initialization */
+        display: none; /* Ensures extra approvals are initially hidden */
+    }
+    .btn-action {
+        width: 100px; /* Uniform button size */
     }
   </style>
 </head>
@@ -43,8 +46,8 @@
                 <td>{{ approval.planned_start_date or "N/A" }}</td>
                 <td>{{ approval.planned_end_date or "N/A" }}</td>
                 <td>
-                    <button type="button" class="btn btn-success approve-btn" data-id="{{ approval.sys_id }}">Approve</button>
-                    <button type="button" class="btn btn-danger mt-2 reject-btn" data-id="{{ approval.sys_id }}">Reject</button>
+                    <button type="button" class="btn btn-success btn-action approve-btn" data-id="{{ approval.sys_id }}">Approve</button>
+                    <button type="button" class="btn btn-danger btn-action reject-btn" data-id="{{ approval.sys_id }}">Reject</button>
                 </td>
             </tr>
             {% endfor %}
@@ -70,7 +73,7 @@
 
         document.getElementById("toggleButton")?.addEventListener("click", function() {
             document.querySelectorAll(".hidden-approval").forEach(row => {
-                row.classList.toggle("hidden");
+                row.style.display = row.style.display === "none" ? "table-row" : "none";
             });
             this.innerText = this.innerText === "Show More" ? "Show Less" : "Show More";
         });
