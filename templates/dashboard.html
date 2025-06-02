@@ -40,7 +40,7 @@
         </thead>
         <tbody id="approval-list">
             {% for approval in approvals.approvals %}
-            <tr class="approval-row {% if loop.index > 5 %}hidden-approval{% endif %}">
+            <tr class="approval-row hidden-approval" style="display: none;">
                 <td><strong>{{ approval.approving or "No linked request" }}</strong></td>
                 <td>{{ approval.short_description }}</td>
                 <td>{{ approval.planned_start_date or "N/A" }}</td>
@@ -54,7 +54,7 @@
         </tbody>
     </table>
 
-    {% if approvals|length > 5 %}
+    {% if approvals and approvals.approvals and approvals.approvals|length > 5 %}
         <button id="toggleButton" class="btn btn-primary mt-3">Show More</button>
     {% endif %}
 
@@ -71,11 +71,16 @@
             });
         });
 
+    document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("toggleButton")?.addEventListener("click", function() {
-            document.querySelectorAll(".hidden-approval").forEach(row => {
-                row.style.display = row.style.display === "none" ? "table-row" : "none";
+            let hiddenRows = document.querySelectorAll(".hidden-approval");
+            let currentlyHidden = hiddenRows[0].style.display === "none";
+
+            hiddenRows.forEach(row => {
+                row.style.display = currentlyHidden ? "table-row" : "none";
             });
-            this.innerText = this.innerText === "Show More" ? "Show Less" : "Show More";
+
+            this.innerText = currentlyHidden ? "Show Less" : "Show More";
         });
     });
 
