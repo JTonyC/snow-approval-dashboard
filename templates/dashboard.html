@@ -62,15 +62,7 @@
 </section>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll(".approve-btn, .reject-btn").forEach(button => {
-            button.addEventListener("click", function() {
-                let action = this.classList.contains("approve-btn") ? "approve" : "reject";
-                let approvalId = this.getAttribute("data-id");
-                simulateAction(action, approvalId);
-            });
-        });
-
+    // Toggle visibility of additional approval rows
     document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("toggleButton")?.addEventListener("click", function() {
             let hiddenRows = document.querySelectorAll(".hidden-approval");
@@ -83,7 +75,7 @@
             this.innerText = currentlyHidden ? "Show Less" : "Show More";
         });
     });
-
+    // Handle approval and rejection actions simulated
     function simulateAction(action, approvalId) {
         const message = `Action success: ${action} simulated for approval ID ${approvalId}`;
         document.getElementById("actionFeedback").innerText = message;
