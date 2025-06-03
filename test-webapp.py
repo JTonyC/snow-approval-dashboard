@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # REQUIRED for sessions
 
-# Configuration for your ServiceNow instance and OAuth app
+# Configuration for the ServiceNow instance and OAuth app
 load_dotenv()  # Load environment variables from a .env file if available
 SERVICENOW_URL = os.getenv("snow_pdi_url") #snow pdi url
 CLIENT_ID = os.getenv("snow_oauth_client_id")#snow oauth pdi client id
@@ -47,7 +47,6 @@ def refresh_access_token():
         app.logger.error(f"Token refresh failed: {token_response.text}")
         return None
 
-#amended
 def get_user_approval_tasks():
     """Fetch approvals and associated request details for the logged-in user."""
     access_token = session.get("access_token")
@@ -82,6 +81,7 @@ def get_user_approval_tasks():
             app.logger.error(f"Error fetching approvals: {approval_response.status_code} {approval_response.text}")
             return {"approvals": []}
 
+        # Parse the response to get the list of approvals
         approvals = approval_response.json().get("result", [])
 
         # Retrieve details about the request being approved
@@ -89,16 +89,10 @@ def get_user_approval_tasks():
             sysapproval_id = approval.get("sysapproval", {}).get("value")
             source_table = approval.get("source_table")
 
-            #app.logger.error(f"Approval ID: {approval.get('sys_id')}, source_table: {source_table}, sysapproval: {sysapproval_id}")
-
+            # Initialize fields for the approval
             if sysapproval_id and source_table:
                 request_url = f"{SERVICENOW_URL}/api/now/table/{source_table}?sysparm_query=sys_id={sysapproval_id}&sysparm_fields=number,short_description,state,start_date,end_date"
-
-                #app.logger.error(f"Fetching request details from: {request_url}")
-
                 request_response = requests.get(request_url, headers=headers, timeout=30)
-
-                #app.logger.error(f"Change Request API Response: {request_response.json()}")
 
                 if request_response.status_code == 401:  # Access token expired again
                     app.logger.info("Access token expired during request fetch, attempting refresh...")
@@ -129,22 +123,17 @@ def get_user_approval_tasks():
                         "3": "Awaiting Approval"
                     }
                     approval["state"] = state_mapping.get(str(approving_data.get("state")), approving_data.get("state"))
-
                 else:
                     app.logger.error(f"Error fetching request details: {request_response.status_code} {request_response.text}")
                     approval["approving"] = "Error retrieving data"
                     approval["short_description"] = "Error retrieving data"
-
             else:
                 app.logger.error(f"Missing sysapproval or source_table for approval: {approval.get('sys_id')}")
-
         return {"approvals": approvals}
-
     except Exception as e:
         app.logger.error(f"Exception in get_user_approval_tasks: {e}")
         return {"approvals": []}
 
-#new
 @app.route('/approve/<approval_id>', methods=['POST'])
 def approve_task(approval_id):
     """Approve a given approval task."""
@@ -162,7 +151,6 @@ def approve_task(approval_id):
     else:
         return {"status": "error", "message": f"Error approving task: {response.text}"}, response.status_code
 
-#new
 @app.route('/reject/<approval_id>', methods=['POST'])
 def reject_task(approval_id):
     """Reject a given approval task."""
