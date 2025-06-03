@@ -27,6 +27,7 @@ def generate_pkce():
 def refresh_access_token():
     refresh_token = session.get("refresh_token")
     if not refresh_token:
+        app.logger.error(f"No refresh token available.")
         return None
 
     data = {
@@ -39,10 +40,11 @@ def refresh_access_token():
     if token_response.status_code == 200:
         token_data = token_response.json()
         session["access_token"] = token_data["access_token"]
-        # Update refresh_token if a new one is provided.
         session["refresh_token"] = token_data.get("refresh_token", refresh_token)
+        app.logger.error(f"Token refreshed successfully: {token_response.text}")
         return token_data["access_token"]
     else:
+        app.logger.error(f"Token refresh failed: {token_response.text}")
         return None
 
 #amended
@@ -50,8 +52,11 @@ def get_user_approval_tasks():
     """Fetch approvals and associated request details for the logged-in user."""
     access_token = session.get("access_token")
     user_data = session.get("user_data", {})
-    if not access_token or not user_data:
-        return {"approvals": []}
+    if not access_token:
+        access_token = refresh_access_token()
+        if not access_token:
+            app.logger.error("Unauthorized: No valid access token available.")
+            return {"approvals": []}
 
     user_sys_id = user_data.get("result", {}).get("user_sys_id")
     if not user_sys_id:
@@ -65,7 +70,13 @@ def get_user_approval_tasks():
         approval_url = f"{SERVICENOW_URL}/api/now/table/sysapproval_approver?sysparm_query={approval_query}&sysparm_fields=sys_id,sysapproval,source_table,short_description,state,comments,sys_created_on&sysparm_limit=10"
         approval_response = requests.get(approval_url, headers=headers)
 
-        #app.logger.error(f"Approval API Response: {approval_response.json()}")
+        if approval_response.status_code == 401:  # Access token expired
+            app.logger.info("Access token expired, attempting refresh...")
+            access_token = refresh_access_token()
+            if not access_token:
+                return {"approvals": []}
+            headers["Authorization"] = f"Bearer {access_token}"
+            approval_response = requests.get(approval_url, headers=headers)
 
         if approval_response.status_code != 200:
             app.logger.error(f"Error fetching approvals: {approval_response.status_code} {approval_response.text}")
@@ -88,6 +99,14 @@ def get_user_approval_tasks():
                 request_response = requests.get(request_url, headers=headers, timeout=30)
 
                 #app.logger.error(f"Change Request API Response: {request_response.json()}")
+
+                if request_response.status_code == 401:  # Access token expired again
+                    app.logger.info("Access token expired during request fetch, attempting refresh...")
+                    access_token = refresh_access_token()
+                    if not access_token:
+                        return {"approvals": []}
+                    headers["Authorization"] = f"Bearer {access_token}"
+                    request_response = requests.get(request_url, headers=headers, timeout=30)
 
                 if request_response.status_code == 200:
                     approving_data = request_response.json().get("result", [])[0]
