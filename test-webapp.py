@@ -16,6 +16,7 @@ CLIENT_ID = os.getenv("snow_oauth_client_id")#snow oauth pdi client id
 CLIENT_SECRET = os.getenv("snow_oauth_client_secret")#snow oauth pdi client secret
 REDIRECT_URI = "https://tcazr-testwebapp-dce6c5dbhvgmdbh8.uksouth-01.azurewebsites.net/callback"  # Use your Azure Web App URL
 
+# Generate a PKCE code verifier and code challenge
 def generate_pkce():
     """Generate a PKCE code verifier and code challenge."""
     code_verifier = base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip("=")
@@ -24,12 +25,13 @@ def generate_pkce():
     ).decode().rstrip("=")
     return code_verifier, code_challenge
 
+# Function to refresh the access token using the refresh token
 def refresh_access_token():
     refresh_token = session.get("refresh_token")
     if not refresh_token:
         app.logger.error(f"No refresh token available.")
         return None
-
+    # Prepare the data for the token refresh request
     data = {
         "grant_type": "refresh_token",
         "refresh_token": refresh_token,
@@ -48,6 +50,7 @@ def refresh_access_token():
         app.logger.error(f"Token refresh failed: {token_response.text}")
         return None
 
+# Function to fetch user approval tasks
 def get_user_approval_tasks():
     """Fetch approvals and associated request details for the logged-in user."""
     access_token = session.get("access_token")
@@ -135,7 +138,10 @@ def get_user_approval_tasks():
         app.logger.error(f"Exception in get_user_approval_tasks: {e}")
         return {"approvals": []}
 
+# Route handlers for the Flask app
 @app.route('/approve/<approval_id>', methods=['POST'])
+
+# Approve a task by its ID
 def approve_task(approval_id):
     """Approve a given approval task."""
     access_token = session.get('access_token')
@@ -152,6 +158,7 @@ def approve_task(approval_id):
     else:
         return {"status": "error", "message": f"Error approving task: {response.text}"}, response.status_code
 
+# Route to reject a task
 @app.route('/reject/<approval_id>', methods=['POST'])
 def reject_task(approval_id):
     """Reject a given approval task."""
@@ -247,7 +254,6 @@ def callback():
     
     if user_response.status_code == 200:
         user_data = user_response.json()
-        # Save the entire response so you can inspect it in the dashboard.
         session["user_data"] = user_data
 
         result = user_data.get("result")
